@@ -54,28 +54,31 @@ export default function Home() {
   }, [setSatellites, setGroundStations]);
 
   return (
-    <div className="flex flex-col h-screen bg-gray-900 text-white">
+    <div className="flex flex-col h-screen bg-gray-900 text-white overflow-hidden">
       {/* Header */}
       <Header viewMode={viewMode} setViewMode={setViewMode} />
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden min-h-0">
         {/* Sidebar */}
         {isSidebarOpen && (
-          <aside className="w-80 bg-gray-800 border-r border-gray-700 overflow-y-auto">
+          <aside className="w-80 bg-gray-800 border-r border-gray-700 overflow-y-auto flex-shrink-0">
             <Sidebar />
           </aside>
         )}
 
         {/* Main Content */}
-        <main className="flex-1 relative flex flex-col">
-          <div className="flex-1">
+        <main className="flex-1 flex flex-col overflow-hidden min-h-0">
+          {/* View Content - TimeControl을 위한 공간 확보 */}
+          <div className="flex-1 overflow-hidden min-h-0">
             {viewMode === '2d' && <MapView />}
             {viewMode === '3d' && <GlobeView />}
             {viewMode === 'chart' && <ChartView />}
           </div>
 
-          {/* Time Control */}
-          <TimeControl />
+          {/* Time Control - 항상 표시 */}
+          <div className="flex-shrink-0">
+            <TimeControl />
+          </div>
         </main>
       </div>
     </div>

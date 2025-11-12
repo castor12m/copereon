@@ -126,15 +126,15 @@ export default function PassTimeline() {
   const colors = ['#3b82f6', '#ef4444', '#10b981'];
 
   return (
-    <div className="w-full h-full bg-gray-900 p-4 overflow-auto">
-      <div className="space-y-4 flex flex-col" style={{ height: 'calc(100% - 1rem)' }}>
+    <div className="w-full bg-gray-900 p-4">
+      <div className="space-y-4 max-w-7xl mx-auto">
         {/* 타임라인 차트 */}
-        <div className="bg-gray-800 rounded-lg p-4 flex-1 min-h-0 flex flex-col">
-          <h3 className="text-lg font-bold mb-4 flex-shrink-0">
+        <div className="bg-gray-800 rounded-lg p-4">
+          <h3 className="text-lg font-bold mb-4">
             2시간 가시성 예측 - {selectedGroundStation.name}
           </h3>
           
-          <div className="flex-1 min-h-0">
+          <div style={{ width: '100%', height: '400px' }}>
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={timelineData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
@@ -176,7 +176,7 @@ export default function PassTimeline() {
         </div>
 
         {/* 다음 패스 정보 */}
-        <div className="bg-gray-800 rounded-lg p-4 flex-shrink-0">
+        <div className="bg-gray-800 rounded-lg p-4">
           <h3 className="text-lg font-bold mb-4">다음 패스</h3>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
