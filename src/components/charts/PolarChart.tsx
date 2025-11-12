@@ -2,8 +2,7 @@
 
 'use client';
 
-import { useMemo } from 'react';
-import { PolarAngleAxis, PolarGrid, PolarRadiusAxis, Radar, RadarChart, ResponsiveContainer, Tooltip, Legend, Scatter, ScatterChart } from 'recharts';
+import { useMemo, useEffect, useState } from 'react';
 import { useSatelliteStore } from '@/store/satelliteStore';
 import { useUIStore } from '@/store/uiStore';
 import { calculateSatellitePosition, calculateLookAngles } from '@/lib/satellite/calculator';
@@ -15,13 +14,23 @@ export default function PolarChart() {
   const groundStations = useSatelliteStore((state) => state.groundStations);
   const selectedSatelliteId = useSatelliteStore((state) => state.selectedSatelliteId);
   const currentTime = useUIStore((state) => state.currentTime);
+  
+  // 실시간 업데이트를 위한 강제 리렌더링
+  const [, setTick] = useState(0);
+  
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTick(t => t + 1);
+    }, 1000); // 1초마다 업데이트
+    
+    return () => clearInterval(interval);
+  }, []);
 
-  // 선택된 지상국 가져오기
   const selectedGroundStation = groundStations.find(
     gs => gs.id === selectedGroundStationId
   );
 
-  // 위성별 전체 패스 궤적 계산
+  // 위성별 전체 패스 궤적 계산 (부드러운 곡선을 위해 간격 단축)
   const passTrajectories = useMemo(() => {
     if (!selectedGroundStation) return [];
 
@@ -32,7 +41,7 @@ export default function PolarChart() {
     return satellitesToShow.map(satellite => {
       const trajectory = [];
       const duration = 120; // 2시간
-      const interval = 1; // 1분 간격
+      const interval = 0.5; // 30초 간격으로 변경 (더 부드러운 곡선)
 
       for (let i = -duration/2; i <= duration/2; i += interval) {
         const time = new Date(currentTime.getTime() + i * 60 * 1000);
@@ -42,7 +51,6 @@ export default function PolarChart() {
           const lookAngles = calculateLookAngles(position, selectedGroundStation);
           const minElevation = selectedGroundStation.minElevation || 0;
 
-          // 최소 고도각 이상일 때만 추가
           if (lookAngles.elevation >= minElevation) {
             trajectory.push({
               azimuth: lookAngles.azimuth,
@@ -67,7 +75,49 @@ export default function PolarChart() {
     }).filter(item => item.trajectory.length > 0);
   }, [satellites, selectedGroundStation, selectedSatelliteId, currentTime, satellitePositions]);
 
-  // 현재 위성들의 Look Angles (테이블용)
+  // Catmull-Rom 스플라인으로 부드러운 곡선 생성
+  const createSmoothPath = (points: {azimuth: number, elevation: number}[]) => {
+    if (points.length < 2) return '';
+    
+    const polarToCartesian = (azimuth: number, elevation: number) => {
+      const radius = 180 * (1 - elevation / 90);
+      const angleRad = (azimuth - 90) * Math.PI / 180;
+      return {
+        x: 200 + radius * Math.cos(angleRad),
+        y: 200 + radius * Math.sin(angleRad)
+      };
+    };
+
+    const cartesianPoints = points.map(p => polarToCartesian(p.azimuth, p.elevation));
+    
+    if (cartesianPoints.length < 4) {
+      // 포인트가 적으면 일반 라인으로
+      return cartesianPoints.map((p, i) => 
+        `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`
+      ).join(' ');
+    }
+
+    // Catmull-Rom 스플라인
+    let path = `M ${cartesianPoints[0].x} ${cartesianPoints[0].y}`;
+    
+    for (let i = 0; i < cartesianPoints.length - 1; i++) {
+      const p0 = cartesianPoints[Math.max(0, i - 1)];
+      const p1 = cartesianPoints[i];
+      const p2 = cartesianPoints[i + 1];
+      const p3 = cartesianPoints[Math.min(cartesianPoints.length - 1, i + 2)];
+      
+      // 제어점 계산
+      const cp1x = p1.x + (p2.x - p0.x) / 6;
+      const cp1y = p1.y + (p2.y - p0.y) / 6;
+      const cp2x = p2.x - (p3.x - p1.x) / 6;
+      const cp2y = p2.y - (p3.y - p1.y) / 6;
+      
+      path += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p2.x} ${p2.y}`;
+    }
+    
+    return path;
+  };
+
   const currentLookAngles = useMemo(() => {
     if (!selectedGroundStation) return [];
 
@@ -104,54 +154,45 @@ export default function PolarChart() {
   const colors = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6'];
 
   return (
-    <div className="w-full bg-gray-900 p-4">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 max-w-7xl mx-auto">
-        {/* 극좌표 차트 - SVG로 직접 그리기 */}
-        <div className="bg-gray-800 rounded-lg p-4 flex flex-col">
+    <div className="w-full h-full bg-gray-900 p-4 overflow-auto">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4" style={{ height: 'calc(100% - 1rem)' }}>
+        {/* 극좌표 차트 */}
+        <div className="bg-gray-800 rounded-lg p-4 flex flex-col" style={{ maxHeight: '100%' }}>
           <h3 className="text-lg font-bold mb-4 flex-shrink-0">
             극좌표 차트 - {selectedGroundStation.name}
           </h3>
           
-          <div className="w-full aspect-square max-w-lg mx-auto">
+          <div className="flex-1 min-h-0">
             <svg viewBox="0 0 400 400" className="w-full h-full">
               {/* 중심점 */}
               <circle cx="200" cy="200" r="180" fill="none" stroke="#374151" strokeWidth="1" />
               <circle cx="200" cy="200" r="120" fill="none" stroke="#374151" strokeWidth="1" />
               <circle cx="200" cy="200" r="60" fill="none" stroke="#374151" strokeWidth="1" />
               
-              {/* 방위각 선 (N, E, S, W) */}
+              {/* 방위각 선 */}
               <line x1="200" y1="20" x2="200" y2="380" stroke="#4b5563" strokeWidth="1" />
               <line x1="20" y1="200" x2="380" y2="200" stroke="#4b5563" strokeWidth="1" />
               
-              {/* 방위각 라벨 */}
+              {/* 방위각 레이블 */}
               <text x="200" y="15" textAnchor="middle" fill="#9ca3af" fontSize="12">N (0°)</text>
               <text x="385" y="205" textAnchor="start" fill="#9ca3af" fontSize="12">E (90°)</text>
               <text x="200" y="395" textAnchor="middle" fill="#9ca3af" fontSize="12">S (180°)</text>
               <text x="15" y="205" textAnchor="end" fill="#9ca3af" fontSize="12">W (270°)</text>
               
-              {/* 고도각 라벨 */}
+              {/* 고도각 레이블 */}
               <text x="205" y="80" fill="#9ca3af" fontSize="11">60°</text>
               <text x="205" y="140" fill="#9ca3af" fontSize="11">30°</text>
               
-              {/* 위성 궤적 그리기 */}
+              {/* 위성 궤적 그리기 (부드러운 곡선) */}
               {passTrajectories.map((item, index) => {
                 const color = colors[index % colors.length];
-                const points = item.trajectory.map(point => {
-                  // 극좌표 -> 직교좌표 변환
-                  // 고도각: 0° = 외곽(180px), 90° = 중심(0px)
-                  const radius = 180 * (1 - point.elevation / 90);
-                  // 방위각: 0° = 위(북), 시계방향
-                  const angleRad = (point.azimuth - 90) * Math.PI / 180;
-                  const x = 200 + radius * Math.cos(angleRad);
-                  const y = 200 + radius * Math.sin(angleRad);
-                  return `${x},${y}`;
-                }).join(' ');
+                const pathData = createSmoothPath(item.trajectory);
 
                 return (
                   <g key={item.satellite.id}>
                     {/* 궤적 선 */}
-                    <polyline
-                      points={points}
+                    <path
+                      d={pathData}
                       fill="none"
                       stroke={color}
                       strokeWidth="2"
@@ -192,10 +233,10 @@ export default function PolarChart() {
         </div>
 
         {/* 위성 정보 테이블 */}
-        <div className="bg-gray-800 rounded-lg p-4 flex flex-col">
+        <div className="bg-gray-800 rounded-lg p-4 flex flex-col overflow-hidden" style={{ maxHeight: '100%' }}>
           <h3 className="text-lg font-bold mb-4 flex-shrink-0">위성 가시성</h3>
           
-          <div className="space-y-3">
+          <div className="space-y-3 overflow-y-auto flex-1 pr-2">
             {currentLookAngles.map((item: any, index: number) => (
               <div 
                 key={item.satellite.id}
