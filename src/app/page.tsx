@@ -2,12 +2,13 @@
 
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useSatelliteStore } from '@/store/satelliteStore';
 import { useUIStore } from '@/store/uiStore';
 import Header from '@/components/layout/Header';
 import Sidebar from '@/components/layout/Sidebar';
+import TimeControl from '@/components/ui/TimeControl';
 import tleData from '@/data/tle-data.json';
 
 // Dynamic imports for code splitting
@@ -29,8 +30,19 @@ const GlobeView = dynamic(() => import('@/components/globe/GlobeView'), {
   )
 });
 
+const ChartView = dynamic(() => import('@/components/charts/ChartView'), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center h-full">
+      <div className="text-lg">Loading Charts...</div>
+    </div>
+  )
+});
+
+type ViewMode = '2d' | '3d' | 'chart';
+
 export default function Home() {
-  const viewMode = useUIStore((state) => state.viewMode);
+  const [viewMode, setViewMode] = useState<ViewMode>('2d');
   const isSidebarOpen = useUIStore((state) => state.isSidebarOpen);
   const setSatellites = useSatelliteStore((state) => state.setSatellites);
   const setGroundStations = useSatelliteStore((state) => state.setGroundStations);
@@ -44,7 +56,7 @@ export default function Home() {
   return (
     <div className="flex flex-col h-screen bg-gray-900 text-white">
       {/* Header */}
-      <Header />
+      <Header viewMode={viewMode} setViewMode={setViewMode} />
 
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
@@ -55,8 +67,15 @@ export default function Home() {
         )}
 
         {/* Main Content */}
-        <main className="flex-1 relative">
-          {viewMode === '2d' ? <MapView /> : <GlobeView />}
+        <main className="flex-1 relative flex flex-col">
+          <div className="flex-1">
+            {viewMode === '2d' && <MapView />}
+            {viewMode === '3d' && <GlobeView />}
+            {viewMode === 'chart' && <ChartView />}
+          </div>
+
+          {/* Time Control */}
+          <TimeControl />
         </main>
       </div>
     </div>
