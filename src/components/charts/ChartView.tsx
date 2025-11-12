@@ -13,7 +13,7 @@ export default function ChartView() {
   const [activeTab, setActiveTab] = useState<ChartTab>('polar');
 
   return (
-    <div className="w-full h-full flex flex-col bg-gray-900 overflow-hidden">
+    <div className="w-full h-full flex flex-col bg-gray-900">
       {/* 탭 헤더 */}
       <div className="bg-gray-800 border-b border-gray-700 p-2 flex-shrink-0">
         <div className="flex gap-2">
@@ -43,8 +43,8 @@ export default function ChartView() {
         </div>
       </div>
 
-      {/* 차트 컨텐츠 */}
-      <div className="flex-1 overflow-hidden">
+      {/* 차트 컨텐츠 - 스크롤 가능 */}
+      <div className="flex-1 overflow-auto min-h-0">
         {activeTab === 'polar' ? <PolarChart /> : <PassTimeline />}
       </div>
     </div>

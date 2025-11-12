@@ -162,16 +162,37 @@ export default function PolarChart() {
   const colors = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6'];
 
   return (
-    <div className="w-full h-full bg-gray-900 p-4 overflow-auto">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4" style={{ height: 'calc(100% - 1rem)' }}>
-        {/* 극좌표 차트 */}
-        <div className="bg-gray-800 rounded-lg p-4 flex flex-col" style={{ maxHeight: '100%' }}>
+    <div className="w-full bg-gray-900 p-4">
+
+      {/* ✅ 1) 그리드를 3컬럼으로 */}
+      <div className="grid grid-cols-[0.4fr_1fr_1fr] gap-4">
+        
+        {/* 극좌표 차트 - 범례 */}
+        <div className="bg-gray-800 rounded-lg p-4 flex flex-col">
+          <h3 className="text-lg font-bold mb-4 flex-shrink-0">
+            범례
+          </h3>
+          <div className="w-full max-w-sm mx-auto">
+            <svg viewBox="0 0 250 200" className="w-full h-full">
+              {/* 범례 */}
+              {passTrajectories.map((item, index) => (
+                <g key={`legend-${item.satellite.id}`} transform={`translate(10, ${20 + index * 20})`}>
+                  <line x1="0" y1="0" x2="20" y2="0" stroke={colors[index % colors.length]} strokeWidth="2" />
+                  <text x="25" y="4" fill="#e5e7eb" fontSize="12">{item.satellite.name}</text>
+                </g>
+              ))}
+            </svg>
+          </div>
+        </div>
+        
+        {/* 극좌표 차트 - SVG로 직접 그리기 */}
+        <div className="bg-gray-800 rounded-lg p-4 flex flex-col">
           <h3 className="text-lg font-bold mb-4 flex-shrink-0">
             극좌표 차트 - {selectedGroundStation.name}
           </h3>
           
-          <div className="flex-1 min-h-0">
-            <svg viewBox="0 0 400 400" className="w-full h-full">
+          <div className="w-full aspect-square max-w-lg mx-auto">
+            <svg viewBox="0 0 400 500" className="w-full h-full">
               {/* 중심점 */}
               <circle cx="200" cy="200" r="180" fill="none" stroke="#374151" strokeWidth="1" />
               <circle cx="200" cy="200" r="120" fill="none" stroke="#374151" strokeWidth="1" />
@@ -250,23 +271,16 @@ export default function PolarChart() {
                   </g>
                 );
               })}
-              
-              {/* 범례 */}
-              {passTrajectories.map((item, index) => (
-                <g key={`legend-${item.satellite.id}`} transform={`translate(10, ${320 + index * 20})`}>
-                  <line x1="0" y1="0" x2="20" y2="0" stroke={colors[index % colors.length]} strokeWidth="2" />
-                  <text x="25" y="4" fill="#e5e7eb" fontSize="12">{item.satellite.name}</text>
-                </g>
-              ))}
+
             </svg>
           </div>
         </div>
 
         {/* 위성 정보 테이블 */}
-        <div className="bg-gray-800 rounded-lg p-4 flex flex-col overflow-hidden" style={{ maxHeight: '100%' }}>
+        <div className="bg-gray-800 rounded-lg p-4 flex flex-col">
           <h3 className="text-lg font-bold mb-4 flex-shrink-0">위성 가시성</h3>
           
-          <div className="space-y-3 overflow-y-auto flex-1 pr-2">
+          <div className="space-y-3">
             {currentLookAngles.map((item: any, index: number) => (
               <div 
                 key={item.satellite.id}

@@ -54,11 +54,11 @@ export default function Home() {
   }, [setSatellites, setGroundStations]);
 
   return (
-    <div className="flex flex-col h-screen bg-gray-900 text-white">
+    <div className="flex flex-col h-screen bg-gray-900 text-white overflow-hidden">
       {/* Header */}
       <Header viewMode={viewMode} setViewMode={setViewMode} />
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden min-h-0">
         {/* Sidebar */}
         {isSidebarOpen && (
           <aside className="w-80 bg-gray-800 border-r border-gray-700 overflow-y-auto flex-shrink-0">
@@ -67,9 +67,9 @@ export default function Home() {
         )}
 
         {/* Main Content */}
-        <main className="flex-1 flex flex-col overflow-hidden">
+        <main className="flex-1 flex flex-col overflow-hidden min-h-0">
           {/* View Content */}
-          <div className="flex-1 overflow-hidden">
+          <div className="flex-1 overflow-hidden min-h-0">
             {viewMode === '2d' && <MapView />}
             {viewMode === '3d' && <GlobeView />}
             {viewMode === 'chart' && <ChartView />}
