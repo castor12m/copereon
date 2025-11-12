@@ -1,0 +1,134 @@
+{
+  "satellites": [
+    {
+      "id": "iss",
+      "name": "ISS (ZARYA)",
+      "noradId": 25544,
+      "category": "Space Station",
+      "country": "International",
+      "tle": {
+        "name": "ISS (ZARYA)",
+        "line1": "1 25544U 98067A   24316.50000000  .00016717  00000-0  10270-3 0  9005",
+        "line2": "2 25544  51.6416 208.5489 0001247  89.0681 271.0702 15.50030060471234"
+      }
+    },
+    {
+      "id": "hubble",
+      "name": "HUBBLE SPACE TELESCOPE",
+      "noradId": 20580,
+      "category": "Telescope",
+      "country": "USA",
+      "tle": {
+        "name": "HST",
+        "line1": "1 20580U 90037B   24316.50000000  .00001426  00000-0  75643-5 0  9991",
+        "line2": "2 20580  28.4699 140.8931 0002723 327.5115  32.5537 15.09687903123456"
+      }
+    },
+    {
+      "id": "starlink-1",
+      "name": "STARLINK-1007",
+      "noradId": 44713,
+      "category": "Communications",
+      "country": "USA",
+      "tle": {
+        "name": "STARLINK-1007",
+        "line1": "1 44713U 19074A   24316.50000000  .00001234  00000-0  10234-3 0  9990",
+        "line2": "2 44713  53.0542 123.4567 0001234  90.1234 269.9876 15.06491234567890"
+      }
+    },
+    {
+      "id": "gps-biia-1",
+      "name": "GPS BIIA-1 (PRN 32)",
+      "noradId": 20959,
+      "category": "Navigation",
+      "country": "USA",
+      "tle": {
+        "name": "GPS BIIA-1",
+        "line1": "1 20959U 90103A   24316.50000000 -.00000034  00000-0  00000-0 0  9992",
+        "line2": "2 20959  54.9876 123.4567 0123456 234.5678  90.1234  2.00565678123456"
+      }
+    },
+    {
+      "id": "noaa-18",
+      "name": "NOAA 18",
+      "noradId": 28654,
+      "category": "Weather",
+      "country": "USA",
+      "tle": {
+        "name": "NOAA 18",
+        "line1": "1 28654U 05018A   24316.50000000  .00000234  00000-0  15678-4 0  9991",
+        "line2": "2 28654  99.0123  45.6789 0012345  67.8901 292.2345 14.12345678123456"
+      }
+    },
+    {
+      "id": "tiangong",
+      "name": "TIANGONG",
+      "noradId": 48274,
+      "category": "Space Station",
+      "country": "China",
+      "tle": {
+        "name": "TIANGONG",
+        "line1": "1 48274U 21035A   24316.50000000  .00003456  00000-0  56789-4 0  9993",
+        "line2": "2 48274  41.4678 234.5678 0001234 123.4567 236.5432 15.59876543123456"
+      }
+    },
+    {
+      "id": "galileo-1",
+      "name": "GSAT0101 (GALILEO 1)",
+      "noradId": 37846,
+      "category": "Navigation",
+      "country": "Europe",
+      "tle": {
+        "name": "GSAT0101",
+        "line1": "1 37846U 11060A   24316.50000000  .00000012  00000-0  00000-0 0  9998",
+        "line2": "2 37846  56.1234 123.4567 0001234 234.5678 125.4321  1.70475123123456"
+      }
+    },
+    {
+      "id": "landsat-8",
+      "name": "LANDSAT 8",
+      "noradId": 39084,
+      "category": "Earth Observation",
+      "country": "USA",
+      "tle": {
+        "name": "LANDSAT 8",
+        "line1": "1 39084U 13008A   24316.50000000  .00000123  00000-0  45678-5 0  9997",
+        "line2": "2 39084  98.2123  45.6789 0001234 123.4567 236.5432 14.57123456789012"
+      }
+    }
+  ],
+  "groundStations": [
+    {
+      "id": "gs-seoul",
+      "name": "Seoul Ground Station",
+      "latitude": 37.5665,
+      "longitude": 126.9780,
+      "altitude": 38,
+      "minElevation": 10
+    },
+    {
+      "id": "gs-jeju",
+      "name": "Jeju Island Station",
+      "latitude": 33.4996,
+      "longitude": 126.5312,
+      "altitude": 184,
+      "minElevation": 10
+    },
+    {
+      "id": "gs-wallops",
+      "name": "Wallops Flight Facility",
+      "latitude": 37.9402,
+      "longitude": -75.4662,
+      "altitude": 12,
+      "minElevation": 5
+    },
+    {
+      "id": "gs-kourou",
+      "name": "Guiana Space Centre",
+      "latitude": 5.2397,
+      "longitude": -52.7683,
+      "altitude": 16,
+      "minElevation": 5
+    }
+  ]
+}
