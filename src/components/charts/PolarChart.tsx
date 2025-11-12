@@ -2,26 +2,33 @@
 
 'use client';
 
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import { useSatelliteStore } from '@/store/satelliteStore';
+import { useSatelliteUpdater } from '@/lib/hooks/useSatelliteUpdater';
 import { useUIStore } from '@/store/uiStore';
 import { calculateSatellitePosition, calculateLookAngles } from '@/lib/satellite/calculator';
 
 export default function PolarChart() {
   const satellites = useSatelliteStore((state) => state.satellites);
+  const satellitePositions = useSatelliteStore((state) => state.satellitePositions);
   const selectedGroundStationId = useSatelliteStore((state) => state.selectedGroundStationId);
   const groundStations = useSatelliteStore((state) => state.groundStations);
   const selectedSatelliteId = useSatelliteStore((state) => state.selectedSatelliteId);
   const currentTime = useUIStore((state) => state.currentTime);
 
-  // 강제 리렌더링을 위한 state
-  const [updateTrigger, setUpdateTrigger] = useState(0);
+  useSatelliteUpdater();
 
-  // currentTime이 변경될 때마다 강제 리렌더링
+  // 실시간 업데이트를 위한 강제 리렌더링
+  const [, setTick] = useState(0);
+
   useEffect(() => {
-    console.log('🔄 PolarChart: currentTime changed:', currentTime.toISOString());
-    setUpdateTrigger(prev => prev + 1);
-  }, [currentTime]);
+    const interval = setInterval(() => {
+      setTick(t => t + 1);
+    }, 1000); // 1초마다 업데이트
+    
+    return () => clearInterval(interval);
+  }, []);
+
 
   const selectedGroundStation = groundStations.find(
     gs => gs.id === selectedGroundStationId
@@ -73,7 +80,7 @@ export default function PolarChart() {
         currentPosition: currentLookAngles
       };
     }).filter(item => item.trajectory.length > 0 || item.currentPosition !== null);
-  }, [satellites, selectedGroundStation, selectedSatelliteId, currentTime, updateTrigger]);
+  }, [satellites, selectedGroundStation, selectedSatelliteId, currentTime]);
 
   // Catmull-Rom 스플라인으로 부드러운 곡선 생성
   const createSmoothPath = (points: {azimuth: number, elevation: number}[]) => {
@@ -139,7 +146,7 @@ export default function PolarChart() {
         isVisible
       };
     }).filter(Boolean);
-  }, [satellites, selectedGroundStation, selectedSatelliteId, currentTime, updateTrigger]);
+  }, [satellites, selectedGroundStation, selectedSatelliteId, currentTime]);
 
   if (!selectedGroundStation) {
     return (

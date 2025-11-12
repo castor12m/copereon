@@ -13,18 +13,23 @@ export function useSatelliteUpdater() {
   const updateMultipleSatellitePositions = useSatelliteStore(
     (state) => state.updateMultipleSatellitePositions
   );
-  const currentTime = useUIStore((state) => state.currentTime);
-  const setCurrentTime = useUIStore((state) => state.setCurrentTime);
   const timeControlMode = useUIStore((state) => state.timeControlMode);
   const simulationSpeed = useUIStore((state) => state.simulationSpeed);
   const updateInterval = useUIStore((state) => state.mapSettings.updateInterval);
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const currentTimeRef = useRef<Date>(new Date());
 
   useEffect(() => {
+    const setCurrentTime = useUIStore.getState().setCurrentTime;
+    const getCurrentTime = () => useUIStore.getState().currentTime;
+    
+    // 초기 시간 설정
+    currentTimeRef.current = getCurrentTime();
+    
     // 초기 위치 계산
     if (satellites.length > 0) {
-      const positions = calculateMultipleSatellitePositions(satellites, currentTime);
+      const positions = calculateMultipleSatellitePositions(satellites, currentTimeRef.current);
       updateMultipleSatellitePositions(positions);
     }
 
@@ -36,8 +41,9 @@ export function useSatelliteUpdater() {
     intervalRef.current = setInterval(() => {
       const now = timeControlMode === 'realtime' 
         ? new Date()
-        : new Date(currentTime.getTime() + (1000 * simulationSpeed));
+        : new Date(currentTimeRef.current.getTime() + (1000 * simulationSpeed));
 
+      currentTimeRef.current = now;
       setCurrentTime(now);
 
       if (satellites.length > 0) {
@@ -53,11 +59,9 @@ export function useSatelliteUpdater() {
     };
   }, [
     satellites,
-    currentTime,
     timeControlMode,
     simulationSpeed,
     updateInterval,
-    updateMultipleSatellitePositions,
-    setCurrentTime
+    updateMultipleSatellitePositions
   ]);
 }

@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { useSatelliteStore } from '@/store/satelliteStore';
 import { useUIStore } from '@/store/uiStore';
@@ -15,14 +15,6 @@ export default function PassTimeline() {
   const groundStations = useSatelliteStore((state) => state.groundStations);
   const selectedSatelliteId = useSatelliteStore((state) => state.selectedSatelliteId);
   const currentTime = useUIStore((state) => state.currentTime);
-
-  // 강제 리렌더링
-  const [updateTrigger, setUpdateTrigger] = useState(0);
-
-  useEffect(() => {
-    console.log('🔄 PassTimeline: currentTime changed:', currentTime.toISOString());
-    setUpdateTrigger(prev => prev + 1);
-  }, [currentTime]);
 
   const selectedGroundStation = groundStations.find(
     gs => gs.id === selectedGroundStationId
@@ -67,7 +59,7 @@ export default function PassTimeline() {
     }
 
     return data;
-  }, [satellites, selectedGroundStation, selectedSatelliteId, currentTime, updateTrigger]);
+  }, [satellites, selectedGroundStation, selectedSatelliteId, currentTime]);
 
   // 다음 패스 찾기
   const nextPasses = useMemo(() => {
@@ -121,7 +113,7 @@ export default function PassTimeline() {
       
       return null;
     }).filter(Boolean);
-  }, [satellites, selectedGroundStation, selectedSatelliteId, currentTime, updateTrigger]);
+  }, [satellites, selectedGroundStation, selectedSatelliteId, currentTime]);
 
   if (!selectedGroundStation) {
     return (
