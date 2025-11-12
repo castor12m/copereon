@@ -2,6 +2,7 @@
 
 'use client';
 
+import { useEffect, useState } from 'react';
 import { useUIStore } from '@/store/uiStore';
 import { Play, Pause, RotateCcw, FastForward } from 'lucide-react';
 import { format } from 'date-fns';
@@ -14,6 +15,13 @@ export default function TimeControl() {
   const setSimulationSpeed = useUIStore((state) => state.setSimulationSpeed);
   const setCurrentTime = useUIStore((state) => state.setCurrentTime);
 
+  // Hydration 에러 방지를 위한 클라이언트 전용 렌더링
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const speeds = [0.5, 1, 2, 5, 10, 50, 100] as const;
 
   const togglePlayPause = () => {
@@ -25,19 +33,33 @@ export default function TimeControl() {
     setTimeControlMode('realtime');
   };
 
+  // 마운트 전에는 로딩 표시
+  if (!mounted) {
+    return (
+      <div className="bg-gray-800 border-t border-gray-700 p-2">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex-1">
+            <div className="text-xs text-gray-400">현재 시간</div>
+            <div className="text-base font-mono font-bold">Loading...</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="bg-gray-800 border-t border-gray-700 p-3">
-      <div className="flex items-center justify-between gap-4">
+    <div className="bg-gray-800 border-t border-gray-700 p-2">
+      <div className="flex items-center justify-between gap-2">
         {/* 시간 표시 */}
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <div className="text-xs text-gray-400">현재 시간</div>
-          <div className="text-lg font-mono font-bold">
+          <div className="text-base font-mono font-bold truncate" suppressHydrationWarning>
             {format(currentTime, 'yyyy-MM-dd HH:mm:ss')}
           </div>
         </div>
 
         {/* 제어 버튼 */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           {/* 재생/일시정지 */}
           <button
             onClick={togglePlayPause}
@@ -49,9 +71,9 @@ export default function TimeControl() {
             title={timeControlMode === 'simulation' ? '실시간으로 전환' : '시뮬레이션 시작'}
           >
             {timeControlMode === 'simulation' ? (
-              <Pause className="w-5 h-5" />
+              <Pause className="w-4 h-4" />
             ) : (
-              <Play className="w-5 h-5" />
+              <Play className="w-4 h-4" />
             )}
           </button>
 
@@ -61,19 +83,19 @@ export default function TimeControl() {
             className="p-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
             title="현재 시간으로 초기화"
           >
-            <RotateCcw className="w-5 h-5" />
+            <RotateCcw className="w-4 h-4" />
           </button>
         </div>
 
         {/* 속도 선택 */}
-        <div className="flex items-center gap-2">
-          <FastForward className="w-4 h-4 text-gray-400" />
+        <div className="flex items-center gap-1">
+          <FastForward className="w-3 h-3 text-gray-400" />
           <div className="flex gap-1">
             {speeds.map(speed => (
               <button
                 key={speed}
                 onClick={() => setSimulationSpeed(speed)}
-                className={`px-3 py-1 text-sm rounded transition-colors ${
+                className={`px-2 py-1 text-xs rounded transition-colors ${
                   simulationSpeed === speed
                     ? 'bg-blue-600 text-white'
                     : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
@@ -87,8 +109,8 @@ export default function TimeControl() {
         </div>
 
         {/* 모드 표시 */}
-        <div className="text-sm">
-          <span className={`px-3 py-1 rounded ${
+        <div className="text-xs">
+          <span className={`px-2 py-1 rounded ${
             timeControlMode === 'realtime'
               ? 'bg-green-600'
               : 'bg-blue-600'

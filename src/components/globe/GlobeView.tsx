@@ -10,6 +10,9 @@ import Satellite3D from './Satellite3D';
 import OrbitLine from './OrbitLine';
 import CameraController from './CameraController';
 import Stars from './Stars';
+import CountryBorders from './CountryBorders';
+import Sun from './Sun';
+import Moon from './Moon';
 
 export default function GlobeView() {
   const satellites = useSatelliteStore((state) => state.satellites);
@@ -31,19 +34,23 @@ export default function GlobeView() {
         gl={{ antialias: true }}
       >
         {/* 조명 */}
-        <ambientLight intensity={0.3} />
-        <directionalLight
-          position={[5, 3, 5]}
-          intensity={1}
-          castShadow
-        />
-        <pointLight position={[-5, -3, -5]} intensity={0.3} />
+        <ambientLight intensity={0.2} />
+        <pointLight position={[-5, -3, -5]} intensity={0.2} />
 
         {/* 별 배경 */}
         <Stars />
 
+        {/* 태양 (빛 포함) */}
+        <Sun />
+
+        {/* 달 */}
+        <Moon />
+
         {/* 지구 */}
         <Earth />
+
+        {/* 국가/대륙 경계선 */}
+        <CountryBorders />
 
         {/* 위성들 */}
         {satellites.map((satellite) => {
@@ -100,7 +107,7 @@ export default function GlobeView() {
       </div>
 
       {/* 범례 */}
-      <div className="absolute top-20 right-4 bg-gray-800 bg-opacity-90 p-4 rounded-lg shadow-lg z-10">
+      <div className="absolute bottom-4 right-4 bg-gray-800 bg-opacity-90 p-4 rounded-lg shadow-lg z-10">
         <h3 className="text-sm font-bold mb-2">범례</h3>
         <div className="space-y-2 text-xs">
           <div className="flex items-center gap-2">

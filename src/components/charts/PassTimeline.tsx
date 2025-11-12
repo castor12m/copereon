@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { useSatelliteStore } from '@/store/satelliteStore';
 import { useUIStore } from '@/store/uiStore';
@@ -15,6 +15,14 @@ export default function PassTimeline() {
   const groundStations = useSatelliteStore((state) => state.groundStations);
   const selectedSatelliteId = useSatelliteStore((state) => state.selectedSatelliteId);
   const currentTime = useUIStore((state) => state.currentTime);
+
+  // 강제 리렌더링
+  const [updateTrigger, setUpdateTrigger] = useState(0);
+
+  useEffect(() => {
+    console.log('🔄 PassTimeline: currentTime changed:', currentTime.toISOString());
+    setUpdateTrigger(prev => prev + 1);
+  }, [currentTime]);
 
   const selectedGroundStation = groundStations.find(
     gs => gs.id === selectedGroundStationId
@@ -34,8 +42,11 @@ export default function PassTimeline() {
 
     for (let i = 0; i <= duration; i += interval) {
       const time = new Date(currentTime.getTime() + i * 60 * 1000);
+      const hours = String(time.getHours()).padStart(2, '0');
+      const minutes = String(time.getMinutes()).padStart(2, '0');
+      
       const dataPoint: any = {
-        time: format(time, 'HH:mm'),
+        time: `${hours}:${minutes}`,
         timestamp: time.getTime()
       };
 
@@ -56,7 +67,7 @@ export default function PassTimeline() {
     }
 
     return data;
-  }, [satellites, selectedGroundStation, selectedSatelliteId, currentTime]);
+  }, [satellites, selectedGroundStation, selectedSatelliteId, currentTime, updateTrigger]);
 
   // 다음 패스 찾기
   const nextPasses = useMemo(() => {
@@ -110,7 +121,7 @@ export default function PassTimeline() {
       
       return null;
     }).filter(Boolean);
-  }, [satellites, selectedGroundStation, selectedSatelliteId, currentTime]);
+  }, [satellites, selectedGroundStation, selectedSatelliteId, currentTime, updateTrigger]);
 
   if (!selectedGroundStation) {
     return (
@@ -126,15 +137,15 @@ export default function PassTimeline() {
   const colors = ['#3b82f6', '#ef4444', '#10b981'];
 
   return (
-    <div className="w-full bg-gray-900 p-4">
-      <div className="space-y-4 max-w-7xl mx-auto">
+    <div className="w-full h-full bg-gray-900 p-2 overflow-auto">
+      <div className="space-y-2 flex flex-col h-full">
         {/* 타임라인 차트 */}
-        <div className="bg-gray-800 rounded-lg p-4">
-          <h3 className="text-lg font-bold mb-4">
+        <div className="bg-gray-800 rounded-lg p-3 flex-1 min-h-0 flex flex-col">
+          <h3 className="text-base font-bold mb-2 flex-shrink-0">
             2시간 가시성 예측 - {selectedGroundStation.name}
           </h3>
           
-          <div style={{ width: '100%', height: '400px' }}>
+          <div className="flex-1 min-h-0">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={timelineData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
@@ -176,10 +187,10 @@ export default function PassTimeline() {
         </div>
 
         {/* 다음 패스 정보 */}
-        <div className="bg-gray-800 rounded-lg p-4">
-          <h3 className="text-lg font-bold mb-4">다음 패스</h3>
+        <div className="bg-gray-800 rounded-lg p-3 flex-shrink-0">
+          <h3 className="text-base font-bold mb-2">다음 패스</h3>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
             {nextPasses.map((pass: any, index: number) => (
               <div 
                 key={pass.satellite.id}
@@ -197,7 +208,7 @@ export default function PassTimeline() {
                   <div className="flex justify-between">
                     <span className="text-gray-400">시작:</span>
                     <span className="font-mono">
-                      {format(pass.startTime, 'HH:mm:ss')}
+                      {String(pass.startTime.getHours()).padStart(2, '0')}:{String(pass.startTime.getMinutes()).padStart(2, '0')}:{String(pass.startTime.getSeconds()).padStart(2, '0')}
                     </span>
                   </div>
                   <div className="flex justify-between">

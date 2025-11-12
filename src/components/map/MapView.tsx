@@ -98,7 +98,7 @@ export default function MapView() {
       </MapContainer>
 
       {/* 범례 */}
-      <div className="absolute top-20 right-4 bg-gray-800 bg-opacity-90 p-4 rounded-lg shadow-lg z-[1000]">
+      <div className="absolute bottom-4 right-4 bg-gray-800 bg-opacity-90 p-4 rounded-lg shadow-lg z-[1000]">
         <h3 className="text-sm font-bold mb-2">범례</h3>
         <div className="space-y-2 text-xs">
           <div className="flex items-center gap-2">

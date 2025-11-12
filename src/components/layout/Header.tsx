@@ -86,7 +86,7 @@ export default function Header({ viewMode, setViewMode }: HeaderProps) {
 
       {/* Right Section */}
       <div className="flex items-center gap-2">
-        <div className="text-sm text-gray-400">
+        <div className="text-sm text-gray-400" suppressHydrationWarning>
           {new Date().toLocaleString('ko-KR', {
             year: 'numeric',
             month: '2-digit',

@@ -2,27 +2,26 @@
 
 'use client';
 
-import { useRef } from 'react';
-import { useFrame, useLoader } from '@react-three/fiber';
-import { TextureLoader } from 'three';
+import { useRef, useEffect } from 'react';
+import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
+import { useUIStore } from '@/store/uiStore';
+import { getEarthRotation } from '@/lib/utils/astronomy';
 
 /**
- * 3D 지구 컴포넌트
+ * 3D 지구 컴포넌트 - 실제 자전 반영
  */
 export default function Earth() {
   const earthRef = useRef<THREE.Mesh>(null);
+  const currentTime = useUIStore((state) => state.currentTime);
 
-  // 지구 텍스처 로드
-  // 주의: 실제 프로젝트에서는 public/textures/ 폴더에 이미지 파일이 필요합니다
-  // 여기서는 간단한 색상으로 대체
-  
-  // 지구 회전 애니메이션
-  useFrame((state, delta) => {
+  // 실제 시간 기반 지구 자전
+  useEffect(() => {
     if (earthRef.current) {
-      earthRef.current.rotation.y += delta * 0.05; // 천천히 회전
+      const rotation = getEarthRotation(currentTime);
+      earthRef.current.rotation.y = rotation * (Math.PI / 180);
     }
-  });
+  }, [currentTime]);
 
   return (
     <mesh ref={earthRef} position={[0, 0, 0]}>

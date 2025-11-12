@@ -2,29 +2,26 @@
 
 'use client';
 
-import { useMemo, useEffect, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useSatelliteStore } from '@/store/satelliteStore';
 import { useUIStore } from '@/store/uiStore';
 import { calculateSatellitePosition, calculateLookAngles } from '@/lib/satellite/calculator';
 
 export default function PolarChart() {
   const satellites = useSatelliteStore((state) => state.satellites);
-  const satellitePositions = useSatelliteStore((state) => state.satellitePositions);
   const selectedGroundStationId = useSatelliteStore((state) => state.selectedGroundStationId);
   const groundStations = useSatelliteStore((state) => state.groundStations);
   const selectedSatelliteId = useSatelliteStore((state) => state.selectedSatelliteId);
   const currentTime = useUIStore((state) => state.currentTime);
-  
-  // 실시간 업데이트를 위한 강제 리렌더링
-  const [, setTick] = useState(0);
-  
+
+  // 강제 리렌더링을 위한 state
+  const [updateTrigger, setUpdateTrigger] = useState(0);
+
+  // currentTime이 변경될 때마다 강제 리렌더링
   useEffect(() => {
-    const interval = setInterval(() => {
-      setTick(t => t + 1);
-    }, 1000); // 1초마다 업데이트
-    
-    return () => clearInterval(interval);
-  }, []);
+    console.log('🔄 PolarChart: currentTime changed:', currentTime.toISOString());
+    setUpdateTrigger(prev => prev + 1);
+  }, [currentTime]);
 
   const selectedGroundStation = groundStations.find(
     gs => gs.id === selectedGroundStationId
@@ -62,18 +59,21 @@ export default function PolarChart() {
         }
       }
 
+      // 현재 위치 계산 - currentTime 기준으로 직접 계산
+      const currentPosition = calculateSatellitePosition(satellite, currentTime);
+      let currentLookAngles = null;
+      
+      if (currentPosition) {
+        currentLookAngles = calculateLookAngles(currentPosition, selectedGroundStation);
+      }
+
       return {
         satellite,
         trajectory,
-        currentPosition: satellitePositions.get(satellite.id)
-          ? (() => {
-              const pos = satellitePositions.get(satellite.id)!;
-              return calculateLookAngles(pos, selectedGroundStation);
-            })()
-          : null
+        currentPosition: currentLookAngles
       };
-    }).filter(item => item.trajectory.length > 0);
-  }, [satellites, selectedGroundStation, selectedSatelliteId, currentTime, satellitePositions]);
+    }).filter(item => item.trajectory.length > 0 || item.currentPosition !== null);
+  }, [satellites, selectedGroundStation, selectedSatelliteId, currentTime, updateTrigger]);
 
   // Catmull-Rom 스플라인으로 부드러운 곡선 생성
   const createSmoothPath = (points: {azimuth: number, elevation: number}[]) => {
@@ -118,6 +118,7 @@ export default function PolarChart() {
     return path;
   };
 
+  // 현재 위성들의 Look Angles (테이블용) - currentTime 기준으로 직접 계산
   const currentLookAngles = useMemo(() => {
     if (!selectedGroundStation) return [];
 
@@ -126,7 +127,7 @@ export default function PolarChart() {
       : satellites.slice(0, 5);
 
     return satellitesToShow.map(satellite => {
-      const position = satellitePositions.get(satellite.id);
+      const position = calculateSatellitePosition(satellite, currentTime);
       if (!position) return null;
 
       const lookAngles = calculateLookAngles(position, selectedGroundStation);
@@ -138,7 +139,7 @@ export default function PolarChart() {
         isVisible
       };
     }).filter(Boolean);
-  }, [satellites, satellitePositions, selectedGroundStation, selectedSatelliteId]);
+  }, [satellites, selectedGroundStation, selectedSatelliteId, currentTime, updateTrigger]);
 
   if (!selectedGroundStation) {
     return (
@@ -191,28 +192,50 @@ export default function PolarChart() {
                 return (
                   <g key={item.satellite.id}>
                     {/* 궤적 선 */}
-                    <path
-                      d={pathData}
-                      fill="none"
-                      stroke={color}
-                      strokeWidth="2"
-                      strokeOpacity="0.7"
-                    />
+                    {pathData && (
+                      <path
+                        d={pathData}
+                        fill="none"
+                        stroke={color}
+                        strokeWidth="2"
+                        strokeOpacity="0.7"
+                      />
+                    )}
                     
-                    {/* 현재 위치 점 */}
-                    {item.currentPosition && item.currentPosition.elevation >= (selectedGroundStation.minElevation || 0) && (
+                    {/* 현재 위치 점 - 항상 표시 */}
+                    {item.currentPosition && (
                       (() => {
                         const radius = 180 * (1 - item.currentPosition.elevation / 90);
                         const angleRad = (item.currentPosition.azimuth - 90) * Math.PI / 180;
                         const x = 200 + radius * Math.cos(angleRad);
                         const y = 200 + radius * Math.sin(angleRad);
+                        
+                        const isVisible = item.currentPosition.elevation >= (selectedGroundStation.minElevation || 0);
+                        
                         return (
                           <>
+                            {/* 메인 점 */}
                             <circle cx={x} cy={y} r="6" fill={color} opacity="0.9" />
-                            <circle cx={x} cy={y} r="8" fill="none" stroke={color} strokeWidth="2" opacity="0.5">
-                              <animate attributeName="r" from="8" to="12" dur="1s" repeatCount="indefinite" />
-                              <animate attributeName="opacity" from="0.5" to="0" dur="1s" repeatCount="indefinite" />
-                            </circle>
+                            {/* 중심 하이라이트 */}
+                            <circle cx={x} cy={y} r="3" fill="#ffffff" opacity="0.8" />
+                            {/* 펄스 효과 (가시일 때만) */}
+                            {isVisible && (
+                              <circle cx={x} cy={y} r="8" fill="none" stroke={color} strokeWidth="2" opacity="0.5">
+                                <animate attributeName="r" from="8" to="14" dur="1.5s" repeatCount="indefinite" />
+                                <animate attributeName="opacity" from="0.5" to="0" dur="1.5s" repeatCount="indefinite" />
+                              </circle>
+                            )}
+                            {/* 위성 이름 라벨 */}
+                            <text 
+                              x={x} 
+                              y={y - 12} 
+                              textAnchor="middle" 
+                              fill={color} 
+                              fontSize="10" 
+                              fontWeight="bold"
+                            >
+                              {item.satellite.name}
+                            </text>
                           </>
                         );
                       })()
